@@ -1,0 +1,98 @@
+package repository
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
+	"github.com/xkarasb/blog/internal/core/dto"
+	"github.com/xkarasb/blog/pkg/db/postgres"
+	"github.com/xkarasb/blog/pkg/errors"
+)
+
+type BlogRepository struct {
+	DB *postgres.DB
+}
+
+func NewBlogRepository(db *postgres.DB) *BlogRepository {
+	return &BlogRepository{
+		DB: db,
+	}
+}
+
+func (rep *BlogRepository) AddNewUser(email, password_hash, role, refreshToken string) (*dto.UserDB, error) {
+	user := &dto.UserDB{}
+
+	query := `INSERT INTO users (email, password_hash, role, refresh_token, refresh_token_expiry_time) VALUES ($1, $2, $3, $4, $5)
+	RETURNING *;`
+	refreshTokenExpire := time.Now().Add(time.Duration(time.Hour * 24 * 7))
+
+	err := rep.DB.Get(user, query, email, password_hash, role, refreshToken, refreshTokenExpire)
+	if err != nil {
+		pgErr, ok := err.(*pq.Error)
+		if ok && pgErr.Code == "23505" {
+			return nil, errors.ErrorRepositoryUserAlreadyExsist
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (rep *BlogRepository) GetUserByEmail(email string) (*dto.UserDB, error) {
+	user := &dto.UserDB{}
+
+	query := `SELECT * FROM users WHERE email = $1;`
+	err := rep.DB.Get(user, query, email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (rep *BlogRepository) GetUserById(id uuid.UUID) (*dto.UserDB, error) {
+	user := &dto.UserDB{}
+
+	query := `SELECT * FROM users WHERE user_id = $1;`
+	err := rep.DB.Get(user, query, id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (rep *BlogRepository) UpdateRefreshToken(id uuid.UUID, refreshToken string) (*dto.UserDB, error) {
+	user := &dto.UserDB{}
+
+	query := `UPDATE users SET refresh_token = $2 WHERE user_id = $1 RETURNING *;`
+	err := rep.DB.Get(user, query, id, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (rep *BlogRepository) GetRefreshToken(id uuid.UUID) (string, error) {
+	var token string
+	query := `SELECT refresh_token FROM users WHERE user_id = $1;`
+	err := rep.DB.Get(&token, query, id)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+// func (rep *BlogRepository) UpdateRefreshToken(id uuid.UUID, refreshToken string) (*dto.UserDB, error) {
+// 	user := &dto.UserDB{}
+
+// 	query := `UPDATE users SET refresh_token = $1 WHERE id = $2 RETURNING *;`
+// 	err := rep.DB.Get(user, query, id, refreshToken)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return user, nil
+// }
+
+// func (rep *BlogRepository) GetUserById(userId uuid.UUID) error {
+// 	query := `SELECT id, email, password FROM public.users WHERE user_id = $1;`
+// 	err := rep.DB.QueryRow(query, userId).Scan(, &user.Login, &user.Password)
+// }

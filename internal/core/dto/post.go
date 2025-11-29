@@ -1,4 +1,4 @@
-package models
+package dto
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Post struct {
+type PostDB struct {
 	PostId         uuid.UUID `json:"post_id" db:"post_id"`
 	AuthorID       uuid.UUID `json:"author_id" db:"author_id"`
 	IdempotencyKey string    `json:"indempotency_key" db:"indempotency_key"`
@@ -15,5 +15,5 @@ type Post struct {
 	CreatedAt      time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
 	Status         string    `json:"status" db:"status"`
-	Images         []Image   `json:"images" db:"images"`
+	Images         []ImageDB `json:"images" db:"images"`
 }

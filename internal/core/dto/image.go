@@ -1,4 +1,4 @@
-package models
+package dto
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Image struct {
+type ImageDB struct {
 	ImageID   uuid.UUID `json:"image_id" db:"image_id"`
 	PostId    uuid.UUID `json:"post_id" db:"post_id"`
 	ImageUrl  string    `json:"image_url" db:"image_url"`

@@ -2,30 +2,31 @@ package jwt
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
-func NewAccessToken(id int64, secret string) string {
+func NewAccessToken(id uuid.UUID, secret string, ttl time.Duration) string {
 	token := jwt.New(jwt.SigningMethodHS512)
 	token.Claims = jwt.MapClaims{
 		"sub": id,
-		"exp": time.Now().Add(time.Minute * 30).Unix(),
+		"exp": time.Now().Add(ttl).Unix(),
+		"iat": time.Now().Unix(),
 	}
 	tokenString, _ := token.SignedString([]byte(secret))
 	return tokenString
 }
 
-func NewRefreshToken() (string, error) {
-	b := make([]byte, 32)
-	s := rand.NewSource(time.Now().Unix())
-	r := rand.New(s)
-	if _, err := r.Read(b); err != nil {
-		return "", err
+func NewRefreshToken(email, secret string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS512)
+	token.Claims = jwt.MapClaims{
+		"sub": email,
+		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"iat": time.Now().Unix(),
 	}
-	return string(b), nil
+	return token.SignedString([]byte(secret))
 }
 
 func ValidateToken(accessToken, secret string) (*jwt.MapClaims, error) {
@@ -33,7 +34,6 @@ func ValidateToken(accessToken, secret string) (*jwt.MapClaims, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-
 		return []byte(secret), nil
 	})
 
