@@ -9,15 +9,15 @@ import (
 	"github.com/xkarasb/blog/pkg/db/postgres"
 )
 
-func GetAuthRouter(parentMux *http.ServeMux, db *postgres.DB) *http.ServeMux {
-	authRepo := repository.NewBlogRepository(db)
-	authService := service.NewAuthService(authRepo)
-	controller := handlers.NewAuthController(authService)
+func GetAuthRouter(db *postgres.DB) (*http.ServeMux, *service.AuthService) {
+	repo := repository.NewBlogRepository(db)
+	serv := service.NewAuthService(repo, "secret")
+	controller := handlers.NewAuthController(serv)
 	router := http.NewServeMux()
 
 	router.HandleFunc("POST /auth/register", controller.RegisterHandler)
 	router.HandleFunc("POST /auth/login", controller.LoginHandler)
 	router.HandleFunc("POST /auth/refresh-token", controller.RefreshHandler)
 
-	return router
+	return router, serv
 }

@@ -14,17 +14,19 @@ import (
 type AuthRepository interface {
 	AddNewUser(email, password_hash, role, refreshToken string) (*dto.UserDB, error)
 	GetUserByEmail(email string) (*dto.UserDB, error)
+	GetUserById(id uuid.UUID) (*dto.UserDB, error)
 	UpdateRefreshToken(id uuid.UUID, refreshToken string) (*dto.UserDB, error)
-	GetRefreshToken(id uuid.UUID) (string, error)
 }
 
 type AuthService struct {
-	rep AuthRepository
+	rep    AuthRepository
+	secret string
 }
 
-func NewAuthService(rep AuthRepository) *AuthService {
+func NewAuthService(rep AuthRepository, secret string) *AuthService {
 	return &AuthService{
 		rep,
+		secret,
 	}
 }
 
@@ -127,4 +129,26 @@ func (s *AuthService) RefreshToken(token *dto.RefreshRequest) (*dto.RefreshRespo
 	accessToken := jwt.NewAccessToken(dbUser.UserId, "secret", time.Duration(time.Hour*2))
 
 	return &dto.RefreshResponse{AccessToken: accessToken}, nil
+}
+
+func (s *AuthService) AuthorizeUser(token string) (*dto.UserDB, error) {
+	claims, err := jwt.ValidateToken(token, "secret")
+	if err != nil {
+		return nil, err
+	}
+
+	raw, ok := (*claims)["sub"].(string)
+	if !ok {
+		return nil, errors.ErrorInvalidToken
+	}
+	id, err := uuid.Parse(raw)
+	if err != nil {
+		return nil, errors.ErrorInvalidToken
+	}
+	data, err := s.rep.GetUserById(id)
+
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

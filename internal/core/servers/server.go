@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/xkarasb/blog/internal/transport/http/middlewares"
 	"github.com/xkarasb/blog/internal/transport/http/routers"
 	"github.com/xkarasb/blog/pkg/db/postgres"
 )
@@ -20,14 +21,16 @@ type HttpServer struct {
 
 func NewHttpServer(cfg *HttpServerConfig, db *postgres.DB) *HttpServer {
 	apiRouter := http.NewServeMux()
-	// Передают родительский роутер, что бы был равный уровень некоторых ендпоинтов
-	// т.к стандартный пакет не может сравнивать схожие ендпоинты в разных роутерах, что приводит к неверному поведению
-	readRouter := routers.GetReaderRouter(apiRouter)
-	posterRouter := routers.GetPosterRouter(apiRouter)
-	authRouter := routers.GetAuthRouter(apiRouter, db)
 
-	apiRouter.Handle("/", readRouter)
-	apiRouter.Handle("/posts/", posterRouter)
+	authRouter, authService := routers.GetAuthRouter(db)
+	readRouter := routers.GetReaderRouter()
+	posterRouter := routers.GetPosterRouter()
+
+	authMiddleware := middlewares.AuthMiddleware(authService, "secret")
+
+	apiRouter.Handle("/", authMiddleware(readRouter))
+	// Поменял ендпоинт т.к стандартный пакет не может сравнивать схожие ендпоинты в разных роутерах, что приводит к неверному поведению
+	apiRouter.Handle("/post/", authMiddleware(posterRouter))
 	apiRouter.Handle("/auth/", authRouter)
 
 	http.DefaultServeMux.Handle("/api/", http.StripPrefix("/api", apiRouter))

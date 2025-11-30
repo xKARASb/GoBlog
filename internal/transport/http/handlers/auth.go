@@ -6,15 +6,21 @@ import (
 	"net/http"
 
 	"github.com/xkarasb/blog/internal/core/dto"
-	"github.com/xkarasb/blog/internal/core/service"
 	"github.com/xkarasb/blog/pkg/errors"
 )
 
-type AuthController struct {
-	service *service.AuthService
+type AuthService interface {
+	RegistrateUser(user *dto.RegistrateUserRequest) (*dto.RegistrateUserResponse, error)
+	LoginUser(user *dto.LoginUserRequest) (*dto.LoginUserResponse, error)
+	RefreshToken(token *dto.RefreshRequest) (*dto.RefreshResponse, error)
+	AuthorizeUser(token string) (*dto.UserDB, error)
 }
 
-func NewAuthController(service *service.AuthService) *AuthController {
+type AuthController struct {
+	service AuthService
+}
+
+func NewAuthController(service AuthService) *AuthController {
 	return &AuthController{service: service}
 }
 func (c *AuthController) RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +81,7 @@ func (c *AuthController) RefreshHandler(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		if err == errors.ErrorInvalidToken {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "refresh token expired or incorrect\n")
+			fmt.Fprintf(w, "Refresh token expired or incorrect\n")
 			return
 		}
 		w.WriteHeader(http.StatusBadGateway)
