@@ -8,6 +8,7 @@ import (
 	"github.com/xkarasb/blog/internal/core/dto"
 	"github.com/xkarasb/blog/pkg/db/postgres"
 	"github.com/xkarasb/blog/pkg/errors"
+	"github.com/xkarasb/blog/pkg/types"
 )
 
 type BlogRepository struct {
@@ -92,11 +93,7 @@ func (rep *BlogRepository) GetPostByIdempotencyKey(idempotencyKey string) (*dto.
 }
 
 func (rep *BlogRepository) CreatePost(
-	authorId uuid.UUID,
-	idempotencyKey string,
-	title,
-	content string,
-) (*dto.PostDB, error) {
+	authorId uuid.UUID, idempotencyKey, title, content string) (*dto.PostDB, error) {
 	post := &dto.PostDB{}
 
 	query := `INSERT INTO posts (author_id, idempotency_key, title, content) VALUES ($1, $2, $3, $4) RETURNING *;`
@@ -112,18 +109,23 @@ func (rep *BlogRepository) CreatePost(
 	return post, nil
 }
 
-// func (rep *BlogRepository) UpdateRefreshToken(id uuid.UUID, refreshToken string) (*dto.UserDB, error) {
-// 	user := &dto.UserDB{}
+func (rep *BlogRepository) GetPostById(id uuid.UUID) (*dto.PostDB, error) {
+	post := &dto.PostDB{}
 
-// 	query := `UPDATE users SET refresh_token = $1 WHERE id = $2 RETURNING *;`
-// 	err := rep.DB.Get(user, query, id, refreshToken)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return user, nil
-// }
+	query := `SELECT * FROM posts WHERE post_id = $1;`
+	err := rep.DB.Get(post, query, id)
+	if err != nil {
+		return nil, err
+	}
+	return post, nil
+}
 
-// func (rep *BlogRepository) GetUserById(userId uuid.UUID) error {
-// 	query := `SELECT id, email, password FROM public.users WHERE user_id = $1;`
-// 	err := rep.DB.QueryRow(query, userId).Scan(, &user.Login, &user.Password)
-// }
+func (rep *BlogRepository) UpdatePost(id uuid.UUID, title, content string, status types.PostStatus) (*dto.PostDB, error) {
+	post := &dto.PostDB{}
+	query := `UPDATE posts SET title = $2, content = $3, status = $4 WHERE post_id = $1 RETURNING *;`
+	err := rep.DB.Get(post, query, id, title, content, status)
+	if err != nil {
+		return nil, err
+	}
+	return post, nil
+}

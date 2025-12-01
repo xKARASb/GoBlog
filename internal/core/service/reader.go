@@ -51,7 +51,7 @@ func (s *ReaderService) NewPost(authorId uuid.UUID, post *dto.CreatePostRequest)
 	}
 
 	resPost := &dto.CreatePostResponse{
-		PostId: dbPost.AuthorId,
+		PostId: dbPost.PostId,
 	}
 
 	return resPost, nil

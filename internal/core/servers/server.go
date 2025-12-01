@@ -28,16 +28,17 @@ func NewHttpServer(cfg *HttpServerConfig, db *postgres.DB) *HttpServer {
 
 	authService := service.NewAuthService(dbRepo, "secret")
 	readerService := service.NewReaderService(dbRepo)
+	posterService := service.NewPosterService(dbRepo)
 
-	authMiddlewareManager := middlewares.NewAuthMiddlewareManager(authService)
+	authMMan := middlewares.NewAuthMiddlewareManager(authService) //AuthMiddleWareManager - создаёт объект, где хранится секрет, для более гибкой работы с мидлварами и передачи их в роутеры
 
 	authRouter := routers.GetAuthRouter(authService)
-	readRouter := routers.GetReaderRouter(readerService, authMiddlewareManager)
-	posterRouter := routers.GetPosterRouter()
+	readRouter := routers.GetReaderRouter(readerService, authMMan)
+	posterRouter := routers.GetPosterRouter(posterService)
 
-	apiRouter.Handle("/", authMiddlewareManager.AuthMiddleware(readRouter))
+	apiRouter.Handle("/", authMMan.AuthMiddleware(readRouter))
 	// Поменял ендпоинт т.к стандартный пакет не может сравнивать схожие ендпоинты в разных роутерах, что приводит к неверному поведению
-	apiRouter.Handle("/post/", authMiddlewareManager.AuthMiddleware(posterRouter))
+	apiRouter.Handle("/post/", authMMan.AuthMiddleware(authMMan.AuthorOnlyMiddleware(posterRouter)))
 	apiRouter.Handle("/auth/", authRouter)
 
 	http.DefaultServeMux.Handle("/api/", http.StripPrefix("/api", apiRouter))
