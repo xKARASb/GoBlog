@@ -23,8 +23,7 @@ func NewBlogRepository(db *postgres.DB) *BlogRepository {
 func (rep *BlogRepository) AddNewUser(email, password_hash, role, refreshToken string) (*dto.UserDB, error) {
 	user := &dto.UserDB{}
 
-	query := `INSERT INTO users (email, password_hash, role, refresh_token, refresh_token_expiry_time) VALUES ($1, $2, $3, $4, $5)
-	RETURNING *;`
+	query := `INSERT INTO users (email, password_hash, role, refresh_token, refresh_token_expiry_time) VALUES ($1, $2, $3, $4, $5) RETURNING *;`
 	refreshTokenExpire := time.Now().Add(time.Duration(time.Hour * 24 * 7))
 
 	err := rep.DB.Get(user, query, email, password_hash, role, refreshToken, refreshTokenExpire)
@@ -79,6 +78,38 @@ func (rep *BlogRepository) GetRefreshToken(id uuid.UUID) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func (rep *BlogRepository) GetPostByIdempotencyKey(idempotencyKey string) (*dto.PostDB, error) {
+	post := &dto.PostDB{}
+
+	query := `SELECT * FROM posts WHERE idempotency_key = $1;`
+	err := rep.DB.Get(post, query, idempotencyKey)
+	if err != nil {
+		return nil, err
+	}
+	return post, nil
+}
+
+func (rep *BlogRepository) CreatePost(
+	authorId uuid.UUID,
+	idempotencyKey string,
+	title,
+	content string,
+) (*dto.PostDB, error) {
+	post := &dto.PostDB{}
+
+	query := `INSERT INTO posts (author_id, idempotency_key, title, content) VALUES ($1, $2, $3, $4) RETURNING *;`
+
+	err := rep.DB.Get(post, query, authorId, idempotencyKey, title, content)
+	if err != nil {
+		pgErr, ok := err.(*pq.Error)
+		if ok && pgErr.Code == "23505" {
+			return nil, errors.ErrorRepositoryUserAlreadyExsist
+		}
+		return nil, err
+	}
+	return post, nil
 }
 
 // func (rep *BlogRepository) UpdateRefreshToken(id uuid.UUID, refreshToken string) (*dto.UserDB, error) {

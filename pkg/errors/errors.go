@@ -7,4 +7,5 @@ var (
 	ErrorServiceEmailInvalid         = errors.New("invalid email")
 	ErrorRepositoryEmailNotExsist    = errors.New("email not exsist")
 	ErrorInvalidToken                = errors.New("invalid token")
+	ErrorKeyIdempotencyAlreadyUsed   = errors.New("key idempotency already used")
 )
