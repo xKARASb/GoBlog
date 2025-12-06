@@ -18,3 +18,8 @@ type UserDB struct {
 	RefreshToken           string     `json:"refresh_token" db:"refresh_token"`
 	RefreshTokenExpiryTime time.Time  `db:"refresh_token_expiry_time"`
 } //	@name	UserDB
+
+type UserResponse struct {
+	UserId uuid.UUID `json:"user_id"`
+	Email  string    `json:"email"`
+} //	@name	UserResponse

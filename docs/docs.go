@@ -367,7 +367,13 @@ const docTemplate = `{
                 "summary": "Read post",
                 "responses": {
                     "200": {
-                        "description": "aga"
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/PostResponse"
+                            }
+                        }
                     },
                     "400": {
                         "description": "Incorrect body\\nRefresh token expired or incorrect"
@@ -514,6 +520,32 @@ const docTemplate = `{
                 }
             }
         },
+        "PostResponse": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/UserResponse"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "post_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/TypePostStatus"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "TokenRefreshRequest": {
             "description": "Request to refresh access token using refresh token",
             "type": "object",
@@ -602,6 +634,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "refresh_token": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
                     "type": "string"
                 },
                 "user_id": {

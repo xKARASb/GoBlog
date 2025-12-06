@@ -156,3 +156,31 @@ func (rep *PostgresRepository) DeleteImage(imageId uuid.UUID) (*dto.ImageDB, err
 	return image, nil
 
 }
+
+func (rep *PostgresRepository) GetPublishedPosts() ([]*dto.PostUserDB, error) {
+	var posts []*dto.PostUserDB
+
+	query := `SELECT p.*, u.* FROM posts p
+LEFT JOIN users u ON u.user_id = p.author_id
+WHERE p.status = 'published';`
+	err := rep.DB.Select(&posts, query)
+
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+func (rep *PostgresRepository) GetUserPosts(userId uuid.UUID) ([]*dto.PostUserDB, error) {
+	var posts []*dto.PostUserDB
+
+	query := `SELECT p.*, u.* FROM posts p
+LEFT JOIN users u ON u.user_id = p.author_id
+WHERE p.author_id = $1;`
+	err := rep.DB.Select(&posts, query, userId)
+
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
+}

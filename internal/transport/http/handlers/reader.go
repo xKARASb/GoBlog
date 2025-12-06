@@ -13,6 +13,8 @@ import (
 
 type ReaderService interface {
 	NewPost(authorId uuid.UUID, post *dto.CreatePostRequest) (*dto.CreatePostResponse, error)
+	GetPublishedPosts() ([]*dto.GetPostResponse, error)
+	GetAuthorPosts(authorId uuid.UUID) ([]*dto.GetPostResponse, error)
 }
 
 type ReaderController struct {
@@ -31,7 +33,7 @@ func NewReaderController(service ReaderService) *ReaderController {
 // @Accept			json
 // @Produce		json
 // @Security		BearerAuth
-// @Success		200	"aga"
+// @Success		200	{object}	[]dto.GetPostResponse
 // @Failure		400	"Incorrect body\nRefresh token expired or incorrect"
 // @Failure		403	"Access denied"
 // @Failure		404	"Post not found"
@@ -56,12 +58,37 @@ func (c *ReaderController) ViewSelectionHandler(w http.ResponseWriter, r *http.R
 }
 
 func (c *ReaderController) readerView(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Its reader!\n")
+	posts, err := c.service.GetPublishedPosts()
 
+	if err != nil {
+		fmt.Println(err.Error())
+		w.WriteHeader(http.StatusBadGateway)
+		fmt.Fprintln(w, "Something wrong")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(posts)
 }
 
 func (c *ReaderController) authorView(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Its author!\n")
+	ctx := r.Context()
+	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
+	if !ok {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, "Incorrect user")
+		return
+	}
+	posts, err := c.service.GetAuthorPosts(user.UserId)
+	if err != nil {
+		fmt.Println(err.Error())
+		w.WriteHeader(http.StatusBadGateway)
+		fmt.Fprintln(w, "Something wrong")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(posts)
 }
 
 // @Summary		Create post

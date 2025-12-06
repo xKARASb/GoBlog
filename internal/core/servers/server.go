@@ -50,7 +50,7 @@ func NewHttpServer(cfg *HttpServerConfig, db *postgres.DB, storage *minio.MinIOC
 	apiRouter.Handle("/post/", authMMan.AuthMiddleware(authMMan.AuthorOnlyMiddleware(posterRouter)))
 	apiRouter.Handle("/auth/", authRouter)
 
-	http.DefaultServeMux.Handle("/api/", http.StripPrefix("/api", apiRouter))
+	http.DefaultServeMux.Handle("/api/", http.StripPrefix("/api", middlewares.JSONHandler(apiRouter)))
 	server := &http.Server{
 		Addr: fmt.Sprintf("%s:%d", cfg.Address, cfg.Port),
 	}

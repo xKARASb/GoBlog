@@ -63,6 +63,10 @@ func (m *AuthMiddlewareManager) AuthorOnlyMiddleware(next http.Handler) http.Han
 		}
 		if user.Role == types.Author {
 			next.ServeHTTP(w, r)
+		} else {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprintln(w, "Incorrect user")
+			return
 		}
 	})
 }

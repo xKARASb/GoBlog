@@ -55,6 +55,23 @@ definitions:
       updated_at:
         type: string
     type: object
+  PostResponse:
+    properties:
+      author:
+        $ref: '#/definitions/UserResponse'
+      content:
+        type: string
+      created_at:
+        type: string
+      post_id:
+        type: string
+      status:
+        $ref: '#/definitions/TypePostStatus'
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
   TokenRefreshRequest:
     description: Request to refresh access token using refresh token
     properties:
@@ -115,6 +132,13 @@ definitions:
       access_token:
         type: string
       refresh_token:
+        type: string
+      user_id:
+        type: string
+    type: object
+  UserResponse:
+    properties:
+      email:
         type: string
       user_id:
         type: string
@@ -345,7 +369,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: aga
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/PostResponse'
+            type: array
         "400":
           description: Incorrect body\nRefresh token expired or incorrect
         "403":

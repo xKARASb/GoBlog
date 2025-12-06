@@ -21,6 +21,22 @@ type PostDB struct {
 	Status         types.PostStatus `json:"status" db:"status"`
 } //	@name	Post
 
+//easyjson:skip
+type PostUserDB struct {
+	PostDB
+	UserDB
+}
+
+type GetPostResponse struct {
+	PostId    uuid.UUID        `json:"post_id"`
+	Author    UserResponse     `json:"author"`
+	Title     string           `json:"title"`
+	Content   string           `json:"content"`
+	Status    types.PostStatus `json:"status"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt time.Time        `json:"updated_at"`
+} //	@name	PostResponse
+
 // @Description	Request payload for creating a new post
 type CreatePostRequest struct {
 	IdempotencyKey string `json:"idempotency_key"`
