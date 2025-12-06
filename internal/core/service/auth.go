@@ -54,7 +54,7 @@ func (s *AuthService) RegistrateUser(user *dto.RegistrateUserRequest) (*dto.Regi
 		return nil, err
 	}
 
-	refreshToken, err := jwt.NewRefreshToken(user.Email, "secret")
+	refreshToken, err := jwt.NewRefreshToken(user.Email, s.secret)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (s *AuthService) RegistrateUser(user *dto.RegistrateUserRequest) (*dto.Regi
 	if err != nil {
 		return nil, err
 	}
-	accessToken := jwt.NewAccessToken(newUser.UserId, "secret", time.Duration(time.Hour*2))
+	accessToken := jwt.NewAccessToken(newUser.UserId, s.secret, time.Duration(time.Hour*2))
 
 	resUser := &dto.RegistrateUserResponse{
 		Id:           newUser.UserId,
@@ -85,7 +85,7 @@ func (s *AuthService) LoginUser(user *dto.LoginUserRequest) (*dto.LoginUserRespo
 		return nil, errors.ErrorRepositoryEmailNotExsist
 	}
 
-	refreshToken, err := jwt.NewRefreshToken(dbUser.Email, "secret")
+	refreshToken, err := jwt.NewRefreshToken(dbUser.Email, s.secret)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (s *AuthService) LoginUser(user *dto.LoginUserRequest) (*dto.LoginUserRespo
 		return nil, errors.ErrorRepositoryEmailNotExsist
 	}
 
-	accessToken := jwt.NewAccessToken(dbUser.UserId, "secret", time.Duration(time.Hour*2))
+	accessToken := jwt.NewAccessToken(dbUser.UserId, s.secret, time.Duration(time.Hour*2))
 
 	resUser := &dto.LoginUserResponse{
 		Id:           dbUser.UserId,
@@ -106,7 +106,7 @@ func (s *AuthService) LoginUser(user *dto.LoginUserRequest) (*dto.LoginUserRespo
 }
 
 func (s *AuthService) RefreshToken(token *dto.RefreshRequest) (*dto.RefreshResponse, error) {
-	claims, err := jwt.ValidateToken(token.RefreshToken, "secret")
+	claims, err := jwt.ValidateToken(token.RefreshToken, s.secret)
 
 	if err != nil {
 		return nil, err
@@ -126,13 +126,13 @@ func (s *AuthService) RefreshToken(token *dto.RefreshRequest) (*dto.RefreshRespo
 		return nil, errors.ErrorInvalidToken
 	}
 
-	accessToken := jwt.NewAccessToken(dbUser.UserId, "secret", time.Duration(time.Hour*2))
+	accessToken := jwt.NewAccessToken(dbUser.UserId, s.secret, time.Duration(time.Hour*2))
 
 	return &dto.RefreshResponse{AccessToken: accessToken}, nil
 }
 
 func (s *AuthService) AuthorizeUser(token string) (*dto.UserDB, error) {
-	claims, err := jwt.ValidateToken(token, "secret")
+	claims, err := jwt.ValidateToken(token, s.secret)
 	if err != nil {
 		return nil, err
 	}
