@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -42,8 +41,7 @@ func (c *ReaderController) ViewSelectionHandler(w http.ResponseWriter, r *http.R
 	ctx := r.Context()
 	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 		return
 	}
 	switch user.Role {
@@ -52,8 +50,7 @@ func (c *ReaderController) ViewSelectionHandler(w http.ResponseWriter, r *http.R
 	case types.Reader:
 		c.readerView(w, r)
 	default:
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 	}
 }
 
@@ -61,9 +58,7 @@ func (c *ReaderController) readerView(w http.ResponseWriter, r *http.Request) {
 	posts, err := c.service.GetPublishedPosts()
 
 	if err != nil {
-		fmt.Println(err.Error())
-		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintln(w, "Something wrong")
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 
@@ -75,15 +70,12 @@ func (c *ReaderController) authorView(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 		return
 	}
 	posts, err := c.service.GetAuthorPosts(user.UserId)
 	if err != nil {
-		fmt.Println(err.Error())
-		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintln(w, "Something wrong")
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 
@@ -107,27 +99,23 @@ func (c *ReaderController) CreatePostHandler(w http.ResponseWriter, r *http.Requ
 	ctx := r.Context()
 	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 		return
 	}
 
 	reqPost := &dto.CreatePostRequest{}
 	if err := json.NewDecoder(r.Body).Decode(reqPost); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "Incorrect body")
+		http.Error(w, errors.ErrorHttpIncorrectBody.Error(), http.StatusBadRequest)
 		return
 	}
 	resPost, err := c.service.NewPost(user.UserId, reqPost)
 
 	if err != nil {
 		if err == errors.ErrorKeyIdempotencyAlreadyUsed {
-			w.WriteHeader(http.StatusConflict)
-			fmt.Fprintln(w, "Idempotency key already used")
-			return
+			http.Error(w, err.Error(), http.StatusConflict)
+		} else {
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
-		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintln(w, "Something wrong")
 		return
 	}
 	w.WriteHeader(http.StatusCreated)

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	json "github.com/mailru/easyjson"
@@ -39,19 +38,16 @@ func (c *AuthController) RegisterHandler(w http.ResponseWriter, r *http.Request)
 	reqUser := &dto.RegistrateUserRequest{}
 
 	if err := json.UnmarshalFromReader(r.Body, reqUser); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "Incorrect body")
+		http.Error(w, errors.ErrorHttpIncorrectBody.Error(), http.StatusBadRequest)
 		return
 	}
 	resp, err := c.service.RegistrateUser(reqUser)
 	if err != nil {
 		if err == errors.ErrorRepositoryUserAlreadyExsist {
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, "%s\n", err.Error())
-			return
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
-		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintf(w, "%s\n", err.Error())
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -71,20 +67,17 @@ func (c *AuthController) RegisterHandler(w http.ResponseWriter, r *http.Request)
 func (c *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	reqUser := &dto.LoginUserRequest{}
 	if err := json.UnmarshalFromReader(r.Body, reqUser); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "Incorrect body")
+		http.Error(w, errors.ErrorHttpIncorrectBody.Error(), http.StatusBadRequest)
 		return
 	}
 	resp, err := c.service.LoginUser(reqUser)
 
 	if err != nil {
 		if err == errors.ErrorRepositoryEmailNotExsist {
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, "Email or password incorrect\n")
-			return
+			http.Error(w, errors.ErrorHttpIncorrectEmail.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
-		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintf(w, "%s\n", err.Error())
 		return
 	}
 
@@ -104,20 +97,17 @@ func (c *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	req := &dto.RefreshRequest{}
 	if err := json.UnmarshalFromReader(r.Body, req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "Incorrect body")
+		http.Error(w, errors.ErrorHttpIncorrectBody.Error(), http.StatusBadRequest)
 		return
 	}
 	resp, err := c.service.RefreshToken(req)
 
 	if err != nil {
 		if err == errors.ErrorInvalidToken {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "Refresh token expired or incorrect\n")
-			return
+			http.Error(w, errors.ErrorHttpBadRefresh.Error(), http.StatusBadRequest)
+		} else {
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
-		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintf(w, "%s\n", err.Error())
 		return
 	}
 

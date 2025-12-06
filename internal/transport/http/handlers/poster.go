@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"mime/multipart"
 	"net/http"
 
@@ -44,23 +43,20 @@ func (c *PosterController) AddImageHandler(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 		return
 	}
 
 	postId, err := uuid.Parse(r.PathValue("postId"))
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "Post not found")
+		http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		return
 	}
 	file, fileHeader, err := r.FormFile("image")
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintln(w, "Some error while get file")
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 
@@ -69,17 +65,13 @@ func (c *PosterController) AddImageHandler(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		switch err {
 		case errors.ErrorServiceNoAccess:
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintln(w, "Access denied")
+			http.Error(w, errors.ErrorHttpAccessDenied.Error(), http.StatusForbidden)
 		case errors.ErrorServiceIncorrectData:
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "Incorrect status")
+			http.Error(w, errors.ErrorHttpIncorrectStatus.Error(), http.StatusBadRequest)
 		case sql.ErrNoRows:
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, "Post not found")
+			http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		default:
-			w.WriteHeader(http.StatusBadGateway)
-			fmt.Fprintln(w, "Something wrong")
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
 		return
 	}
@@ -104,22 +96,19 @@ func (c *PosterController) EditPostHandler(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 		return
 	}
 	reqPost := &dto.EditPostRequest{}
 	if err := json.UnmarshalFromReader(r.Body, reqPost); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "Incorrect body")
+		http.Error(w, errors.ErrorHttpIncorrectBody.Error(), http.StatusBadRequest)
 		return
 	}
 
 	postId, err := uuid.Parse(r.PathValue("postId"))
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "Post not found")
+		http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -127,17 +116,13 @@ func (c *PosterController) EditPostHandler(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		switch err {
 		case errors.ErrorServiceNoAccess:
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintln(w, "Access denied")
+			http.Error(w, errors.ErrorHttpAccessDenied.Error(), http.StatusForbidden)
 		case errors.ErrorServiceIncorrectData:
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "Incorrect status")
+			http.Error(w, errors.ErrorHttpIncorrectStatus.Error(), http.StatusBadRequest)
 		case sql.ErrNoRows:
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, "Post not found")
+			http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		default:
-			w.WriteHeader(http.StatusBadGateway)
-			fmt.Fprintln(w, "Something wrong")
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
 		return
 	}
@@ -160,23 +145,20 @@ func (c *PosterController) DeleteImageHandler(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 		return
 	}
 
 	postId, err := uuid.Parse(r.PathValue("postId"))
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "Post not found")
+		http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		return
 	}
 	imageId, err := uuid.Parse(r.PathValue("imageId"))
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "Image not found")
+		http.Error(w, errors.ErrorHttpImageNotFound.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -185,17 +167,13 @@ func (c *PosterController) DeleteImageHandler(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch err {
 		case errors.ErrorServiceNoAccess:
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintln(w, "Access denied")
+			http.Error(w, errors.ErrorHttpAccessDenied.Error(), http.StatusForbidden)
 		case errors.ErrorServiceIncorrectData:
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "Incorrect status")
+			http.Error(w, errors.ErrorHttpIncorrectStatus.Error(), http.StatusBadRequest)
 		case sql.ErrNoRows:
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, "Post not found")
+			http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		default:
-			w.WriteHeader(http.StatusBadGateway)
-			fmt.Fprintln(w, "Something wrong")
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
 		return
 	}
@@ -221,22 +199,19 @@ func (c *PosterController) PublishHandler(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 	user, ok := ctx.Value(types.CtxUser).(*dto.UserDB)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Incorrect user")
+		http.Error(w, errors.ErrorHttpIncorrectUser.Error(), http.StatusForbidden)
 		return
 	}
 	reqPost := &dto.PublishPostRequest{}
 	if err := json.UnmarshalFromReader(r.Body, reqPost); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "Incorrect body")
+		http.Error(w, errors.ErrorHttpIncorrectBody.Error(), http.StatusBadRequest)
 		return
 	}
 
 	postId, err := uuid.Parse(r.PathValue("postId"))
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "Post not exsist")
+		http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -245,17 +220,13 @@ func (c *PosterController) PublishHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch err {
 		case errors.ErrorServiceNoAccess:
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintln(w, "Access denied")
+			http.Error(w, errors.ErrorHttpAccessDenied.Error(), http.StatusForbidden)
 		case errors.ErrorServiceIncorrectData:
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, "Incorrect status")
+			http.Error(w, errors.ErrorHttpIncorrectStatus.Error(), http.StatusBadRequest)
 		case sql.ErrNoRows:
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, "Post not found")
+			http.Error(w, errors.ErrorHttpPostNotFound.Error(), http.StatusNotFound)
 		default:
-			w.WriteHeader(http.StatusBadGateway)
-			fmt.Fprintln(w, "Something wrong")
+			http.Error(w, err.Error(), http.StatusBadGateway)
 		}
 		return
 	}
