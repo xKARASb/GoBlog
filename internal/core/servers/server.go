@@ -8,7 +8,7 @@ import (
 	"github.com/xkarasb/blog/docs"
 	"github.com/xkarasb/blog/internal/core/repository"
 	"github.com/xkarasb/blog/internal/core/service"
-	"github.com/xkarasb/blog/internal/transport/http/middlewares"
+	mw "github.com/xkarasb/blog/internal/transport/http/middlewares"
 	"github.com/xkarasb/blog/internal/transport/http/routers"
 	"github.com/xkarasb/blog/pkg/db/postgres"
 	"github.com/xkarasb/blog/pkg/storage/minio"
@@ -17,6 +17,7 @@ import (
 type HttpServerConfig struct {
 	Address string `env:"ADDRESS" env-default:"127.0.0.1"`
 	Port    int    `env:"PORT" env-default:"8080"`
+	Secret  string `env:"SECRET" env-default:"secret"`
 }
 
 type HttpServer struct {
@@ -29,7 +30,7 @@ type HttpServer struct {
 //	@name						Authorization
 //	@description				Enter: Bearer {jwt_token}
 
-func NewHttpServer(cfg *HttpServerConfig, db *postgres.DB, storage *minio.MinIOClient, isDoc bool) *HttpServer {
+func NewHttpServer(cfg HttpServerConfig, db *postgres.DB, storage *minio.MinIOClient, isDoc bool) *HttpServer {
 	apiRouter := http.NewServeMux()
 
 	dbRepo := repository.NewBlogRepository(db)
@@ -39,7 +40,7 @@ func NewHttpServer(cfg *HttpServerConfig, db *postgres.DB, storage *minio.MinIOC
 	readerService := service.NewReaderService(dbRepo)
 	posterService := service.NewPosterService(dbRepo, storRepo)
 
-	authMMan := middlewares.NewAuthMiddlewareManager(authService) //AuthMiddleWareManager - создаёт объект, где хранится секрет, для более гибкой работы с мидлварами и передачи их в роутеры
+	authMMan := mw.NewAuthMiddlewareManager(authService) //AuthMiddleWareManager - создаёт объект, где хранится секрет, для более гибкой работы с мидлварами и передачи их в роутеры
 
 	authRouter := routers.GetAuthRouter(authService)
 	readRouter := routers.GetReaderRouter(readerService, authMMan)
@@ -50,7 +51,10 @@ func NewHttpServer(cfg *HttpServerConfig, db *postgres.DB, storage *minio.MinIOC
 	apiRouter.Handle("/post/", authMMan.AuthMiddleware(authMMan.AuthorOnlyMiddleware(posterRouter)))
 	apiRouter.Handle("/auth/", authRouter)
 
-	http.DefaultServeMux.Handle("/api/", http.StripPrefix("/api", middlewares.JSONHandler(apiRouter)))
+	router := mw.Logger(mw.JSONHandler(apiRouter))
+
+	http.DefaultServeMux.Handle("/api/", http.StripPrefix("/api", router))
+
 	server := &http.Server{
 		Addr: fmt.Sprintf("%s:%d", cfg.Address, cfg.Port),
 	}
@@ -67,7 +71,7 @@ func NewHttpServer(cfg *HttpServerConfig, db *postgres.DB, storage *minio.MinIOC
 	fmt.Println(server.Addr)
 
 	return &HttpServer{
-		cfg,
+		&cfg,
 		server,
 	}
 }

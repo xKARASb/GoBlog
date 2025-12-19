@@ -19,7 +19,7 @@ type DB struct {
 	*sqlx.DB
 }
 
-func New(config *PostgresConfig) (*DB, error) {
+func New(config PostgresConfig) (*DB, error) {
 	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
 		config.Username, config.Password, config.Host, config.Port, config.DbName)
 	db, err := sqlx.Connect("postgres", dsn)
