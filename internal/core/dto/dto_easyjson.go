@@ -216,7 +216,7 @@ func easyjson56de76c1DecodeGithubComXkarasbBlogInternalCoreDto2(in *jlexer.Lexer
 			if in.IsNull() {
 				in.Skip()
 			} else {
-				out.Role = string(in.String())
+				out.Role = types.Role(in.String())
 			}
 		default:
 			in.SkipRecursive()

@@ -58,7 +58,7 @@ func (s *AuthService) RegistrateUser(user *dto.RegistrateUserRequest) (*dto.Regi
 	if err != nil {
 		return nil, err
 	}
-	newUser, err := s.rep.AddNewUser(user.Email, passwordHash, user.Role, refreshToken)
+	newUser, err := s.rep.AddNewUser(user.Email, passwordHash, string(user.Role), refreshToken)
 
 	if err != nil {
 		return nil, err

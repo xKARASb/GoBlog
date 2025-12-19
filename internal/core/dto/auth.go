@@ -1,12 +1,15 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	types "github.com/xkarasb/blog/pkg/types"
+)
 
 // @Description	Request payload for registering a new user
 type RegistrateUserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	Email    string     `json:"email"`
+	Password string     `json:"password"`
+	Role     types.Role `json:"role"`
 } //	@name	UserRegistrationRequest
 
 // @Description	Response with authentication tokens after registration

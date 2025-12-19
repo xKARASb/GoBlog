@@ -92,6 +92,14 @@ definitions:
     x-enum-varnames:
     - DraftStatus
     - PublishedStatus
+  TypeUserRole:
+    enum:
+    - author
+    - reader
+    type: string
+    x-enum-varnames:
+    - Author
+    - Reader
   UpdatePostStatusRequest:
     description: Request to change post status (publish/unpublish)
     properties:
@@ -124,7 +132,7 @@ definitions:
       password:
         type: string
       role:
-        type: string
+        $ref: '#/definitions/TypeUserRole'
     type: object
   UserRegistrationResponse:
     description: Response with authentication tokens after registration

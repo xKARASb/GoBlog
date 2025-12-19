@@ -575,6 +575,17 @@ const docTemplate = `{
                 "PublishedStatus"
             ]
         },
+        "TypeUserRole": {
+            "type": "string",
+            "enum": [
+                "author",
+                "reader"
+            ],
+            "x-enum-varnames": [
+                "Author",
+                "Reader"
+            ]
+        },
         "UpdatePostStatusRequest": {
             "description": "Request to change post status (publish/unpublish)",
             "type": "object",
@@ -622,7 +633,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
+                    "$ref": "#/definitions/TypeUserRole"
                 }
             }
         },

@@ -1,6 +1,6 @@
 package types
 
-type Role string
+type Role string //	@name	TypeUserRole
 type ContextKey string
 type PostStatus string //	@name	TypePostStatus
 
