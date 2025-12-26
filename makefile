@@ -23,8 +23,9 @@ utils:
 	@echo "swag installing..."
 	@go install github.com/swaggo/swag/cmd/swag@latest
 	@echo "easyjson installing..."
+	@go get github.com/mailru/easyjson
 	@go install github.com/mailru/easyjson/...@latest
-
+	@go mod tidy
 test:
 	@go test ./internal/transport/http/handlers/... -v
 
